@@ -10,137 +10,193 @@
 
 \section{Lenguajes formales}
 
-Nacimiento de la teoría de lenguajes formales con los papers de Noam Chomsky. 
-\\
-Aplicaciones actuales como en compiladores.
-\\
-Gramáticas como nueva representación corta de los lenguajes! Importante para linguistas de lenguajes naturales.
-\\
-Introducir la idea de gramáticas con distintas restricciones.
-"different levels of the hierarchy correspond to different kinds of memory needed to compute the language".
+% Nacimiento de la teoría de lenguajes formales con los papers de Noam Chomsky. 
+% Aplicaciones actuales como en compiladores.
+% Gramáticas como nueva representación corta de los lenguajes! Importante para linguistas de lenguajes naturales.
+% Introducir la idea de gramáticas con distintas restricciones.
+% "different levels of the hierarchy correspond to different kinds of memory needed to compute the language".
+%Explicar que tiene aplicaciones en compiladores.
 
-/***/
+% /* ejemplo de gramática para if/else */
 
+Comúnmente, el término \textbf{lenguaje} viene referido a los diferentes símbolos, estructuras, gestos y sonidos que las personas hemos estandarizado para comunicarnos en distintas culturas. En el contexto de teoría de la computación, los lenguajes se refieren en cambio a entidades matemáticas, claramente definidas, de cadenas de símbolos y las reglas que los rigen; en esta definición se centra este trabajo.
+
+Estas cadenas son especialmente útiles en el diseño de una gran variedad de sistemas. Por ejemplo, se pueden interpretar las cadenas como secuencias de acciones permitidas, y entonces salta a la vista la utilidad de un método que sepa discriminar las secuencias correctas. Este encuadre permite modelar ejemplos sencillos como el siguiente.
+
+Se trata de una puerta con un sistema de bloqueo —abierto o cerrado en cada estado—, y un sistema de alarma con la capacidad de llamar a la policía —activado o desactivado en cada estado—. 
+
+\begin{figure}[H]
+
+	\tikzset{
+    state/.style={
+        rectangle,
+        draw,
+        minimum width=2.8cm,
+        minimum height=1.2cm,
+        align=center
+    },
+    >={stealth[scale=2]}
+	}
+
+	\centering
+	\begin{tikzpicture}[node distance=3cm, auto]
+		
+		% Nodes
+		\node[state] (S1) 					{ puerta: 0 \\ alarma: 0 };
+		\node[state, right=4cm of S1, double, line width=0.3mm] (S2) 	{ puerta: 1 \\ alarma: 0 };
+		\node[state, below=of S2] (S3) 		{ puerta: 0 \\ alarma: 1 };
+		\node[state, left=4cm of S3] (S4) 	{ puerta: 0 \\ alarma: 0 };
+		\coordinate[left=1cm of S1] (S0);
+		
+		% Transitions
+		\draw[-{Latex[length=3mm, width=2mm]}] (S0) -- (S1);
+		\draw[-{Latex[length=3mm, width=2mm]}][transform canvas={yshift=.1cm}] (S1) -- node[midway, fill=white] {código correcto} (S2);
+		\draw[-{Latex[length=3mm, width=2mm]}][transform canvas={yshift=-.3cm}] (S2) -- node[midway, fill=white] {puerta es cerrada} (S1);
+		\draw[-{Latex[length=3mm, width=2mm]}] (S3) -- node[midway, sloped, fill=white, auto=false] {código correcto} (S1);
+		\draw[-{Latex[length=3mm, width=2mm]}] (S4) -- node[midway, above, fill=white] {código incorrecto} (S3);
+		\draw[-{Latex[length=3mm, width=2mm]}] (S1) -- node[midway, fill=white, auto=false] {código incorrecto} (S4);
+		
+	\end{tikzpicture}
+
+	\caption{Ejemplo de autómata de una puerta y un sistema de alarma simple. Cuando un usuario introduce el código correcto en la puerta desde el estado inicial —arriba a la izquierda—, el sistema cambia a un estado de aceptación en el cual la puerta está abierta y la alarma está inactiva. Cuando introduce un código incorrecto, se le da una oportunidad más (representada por otro estado) antes de activar la alarma. Una vez activada, es necesario introducir el código correcto para desactivarla.}
+	\label{fig:ej_inicial}
+
+\end{figure}
+
+Este diseño describe una serie de acciones contempladas, visibles a través de los caminos presentes en el diagrama que conducen al \textbf{estado de aceptación} arriba a la derecha. Hay en cambio otras secuencias que no se han representado o que se quedan a medio camino. Por ejemplo, no se contempla introducir el código incorrecto mientras suena la alarma, ni cerrar la puerta dos veces seguidas, ni introducir el código correcto y luego el incorrecto.
+
+Esos caminos descritos, que no existen el sistema, finalizan en lo que se denominan \textbf{estados de absorción}, es decir, que ha ocurrido una de dos cosas:
+
+\begin{enumerate}
+	\item La secuencia ha terminado en un estado que no era el estado de aceptación
+	\item La secuencia ha intentado hacer una acción en un estado que no la contemplaba
+\end{enumerate}
+
+Algunas secuencias admitidas:
+
+\begin{center}
+	
+	\rule{0.3\textwidth}{.4pt}
+
+	Introducir el código incorrecto 
+	
+	$\downarrow$ 
+	
+	Introducir el código incorrecto 
+	
+	$\downarrow$ 
+	
+	Introducir el código correcto 
+	
+	\vsp
+
+	\rule{0.3\textwidth}{.4pt}
+
+	Introducir el código correcto 
+	
+	$\downarrow$ 
+	
+	Cerrar la puerta 
+	
+	$\downarrow$ 
+	
+	Introducir el código correcto 
+	
+\end{center}
+
+Si surgiera la necesidad de ser más eficientes con la manera de representar las acciones posibles, existe la posibilidad de \textbf{reescribirlas como un solo símbolo}. Ya que solo hay tres acciones posibles, se usará la siguiente equivalencia:
+
+\begin{center}
+	
+	\begin{tabular}{r r l}
+		
+		Introducir el código correcto & = & a \\
+		Introducir el código incorrecto & = & b \\
+		Cerrar la puerta & = & c \\
+		
+	\end{tabular}
+\end{center}
+
+De modo que se obtiene un conjunto de secuencias admitidas:
+
+\begin{center}
+
+\textbf{bba}
+	
+\textbf{ac}
+	
+\textbf{bbaac}
+	
+\textbf{bbabbabba}
+	
+\textbf{acacac}
+
+\end{center}
+
+Y uno de secuencias no admitidas:
+
+\begin{center}
+
+\textbf{bbbbb}
+
+\textbf{accab}
+
+\textbf{bbac}
+
+\textbf{c}
+
+\end{center}
+
+Con este sistema se ha logrado llegar a un conjunto de secuencias (o cadenas) correctas y otro conjunto de incorrectas. De hecho, por la naturaleza cíclica del sistema, hay infinitas cadenas correctas, ya que —entre otras cosas— se permite introducir el código correcto y luego cerrar la puerta infinitas veces (acacac\dots). 
+
+Esta disposición de cadenas correctas e incorrectas, discriminadas por un sistema, es lo que se define como un \textbf{lenguaje formal} (en adelante simplemente \textbf{lenguaje}).
+
+\begin{definicion}[Lenguaje formal]
+
+Se define $\Sigma^*$ como el conjunto de todas las cadenas posibles sobre un alfabeto $\Sigma$.
+
+Un lenguaje $L$ es un conjunto cualquiera de cadenas sobre un alfabeto $\Sigma$. De modo que $L$ es también un subconjunto de $\Sigma^*$: Aplica restricciones sobre las cadenas que admite.
+
+\end{definicion}
+
+Por ejemplo, el sistema propuesto anteriormente se formaliza como:
+
+\vsp
+$\Sigma_1 \{a,b,c\}$
+
+\vsp
+$\Sigma_1^*$ es el conjunto de cadenas de cualquier longitud que solo contienen símbolos de ese alfabeto: \{a, b, c, aa, ab, ac, aabbccaabc\}.
+
+\vsp
+$L_1$ es un subconjunto de $\Sigma_1^*$ de las cadenas aceptadas por el sistema.
+
+\vsp
 
 
 \subsection{Jerarquía de Chomsky}
 
 \subsubsection{Tipo-3: Lenguajes regulares}
-/* Estructura de reglas que admite */
-
+% /* Estructura de reglas que admite */
 
 \subsubsection{Tipo-2: Lenguajes independientes del contexto}
-/* Estructura de reglas que admite */
+% /* Estructura de reglas que admite */
 
 \subsubsection{Tipo-1: Lenguajes dependientes del contexto}
-/* Estructura de reglas que admite */
+% /* Estructura de reglas que admite */
 
 \subsubsection{Tipo-0: Lenguajes recursivamente enumerables}
-/* Estructura de reglas que admite */
+% /* Estructura de reglas que admite */
 
+\section{Arquitecturas de Machine Learning}
 
-\section{Listas}
-Hacer una lista es simple en \LaTeX. Para ello has de crear un entorno (así se llama) itemize con
-\begin{lstlisting}[style=Latex-color]
-\begin{itemize}
-...
-\end{itemize}
-\end{lstlisting}
-Y dentro de esa estructura, añadir cada elemento de la lista precedido de 
-\begin{lstlisting}[style=Latex-color]
-\item primer ítem de lista
-\item segundo ítem de lista
-...
-\item ultimo ítem de lista
-\end{lstlisting}
+% Explicar cada una en relación a cómo hacen para modelar lenguajes
 
-Es importante que revises este texto tal como aparece en la plantilla y relaciones el aspecto que tiene el PDF final con cómo está escrito el documento \LaTeX.
-\vspace{1em}
-\noindent\hrule
-\vspace{1em}
+\subsection{Redes recurrentes}
 
-Aquí va una lista con subtérminos:
-\begin{lstlisting}[style=Latex-color]
-	\begin{itemize}
-    \item Ingeniería Informática.
-    \item Ingeniería Sonido e Imagen en Telecomunicación.
-    \item Ingeniería Multimedia.
-         \subitem Mención: Creación y ocio digital.
-         \subitem Mención: Gestión de Contenidos.
-	\end{itemize}
-\end{lstlisting}
+\subsection{Long-Short Term Memory (LSTM)}
 
-El resultado es el siguiente:
-\begin{itemize}
-    \item Ingeniería Informática.
-    \item Ingeniería Sonido e Imagen en Telecomunicación.
-    \item Ingeniería Multimedia.
-         \subitem Mención: Creación y ocio digital.
-         \subitem Mención: Gestión de Contenidos.
-\end{itemize}
-\vspace{1em}
-\noindent\hrule
-\vspace{1em}
-Aquí va una lista con subtérminos pero numerada:
-\begin{lstlisting}[style=Latex-color]
-\begin{enumerate}
-    \item Ingeniería Informática.
-    \item Ingeniería Sonido e Imagen en Telecomunicación.
-    \item Ingeniería Multimedia.
-    \begin{enumerate}
-         \item Mención: Creación y ocio digital.
-         \item Mención: Gestión de Contenidos.
-   	\end{enumerate}
-\end{enumerate}
-\end{lstlisting}
+\subsection{Transformers}
 
-El resultado es el siguiente:
-\begin{enumerate}
-    \item Ingeniería Informática.
-    \item Ingeniería Sonido e Imagen en Telecomunicación.
-    \item Ingeniería Multimedia.
-    \begin{enumerate}
-         \item Mención: Creación y ocio digital.
-         \item Mención: Gestión de Contenidos.
-   	\end{enumerate}
-\end{enumerate}
+\subsubsection{Encoder-Only}
 
-\section{Listas de definición}
- 
- Puedes realizar una lista de conceptos con su definición del siguiente modo:
- 
-\begin{lstlisting}[style=Latex-color]
-\begin{description} % Inicio de la lista
- 	\item[MAPP XT:] Programa desarrollado por \textit{Meyer Sound} para el diseño y ajuste de sistemas formados por altavoces de su marca.
-  	\begin{description} % Realiza una lista dentro de la lista
-  		\item[Ventajas:]~ 
-  		El programa permite realizar múltiples ajustes tal como se podría realizar en la realidad con un procesador real.
-  	
-  		Permite analizar la fase recibida en cualquier punto y compararla con otras mediciones.
-  	
-  		Dispone de varios tipos de filtros, inversiones de fase, etc.
-  		\item[Inconvenientes:]~ 
-  		No existe una lista global de los altavoces ubicados en el plano, por lo tanto solo se pueden editar seleccionándolos sobre el plano.
-  	
-  		Sólo permite diseñar en 2 dimensiones, principalmente sobre la vista lateral ya que los array de altavoces no permite voltearlos.
-  	\end{description}
-\end{description}
-\end{lstlisting}
-
- Y \LaTeX~genera lo siguiente:
- 
-\begin{description} % Inicio de la lista
- 	\item[MAPP XT:] Programa desarrollado por \textit{Meyer Sound} para el diseño y ajuste de sistemas formados por altavoces de su marca.
-  	\begin{description} % Realiza una lista dentro de la lista
-  		\item[Ventajas:]~ 
-  		El programa permite realizar múltiples ajustes tal como se podría realizar en la realidad con un procesador real.
-  	
-  		Permite analizar la fase recibida en cualquier punto y compararla con otras mediciones.
-  	
-  		Dispone de varios tipos de filtros, inversiones de fase, etc.
-  		\item[Inconvenientes:]~ 
-  		No existe una lista global de los altavoces ubicados en el plano, por lo tanto solo se pueden editar seleccionándolos sobre el plano.
-  	
-  		Sólo permite diseñar en 2 dimensiones, principalmente sobre la vista lateral ya que los array de altavoces no permite voltearlos.
-  	\end{description}
-\end{description}
+\subsubsection{Decoder-Only}

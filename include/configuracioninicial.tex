@@ -16,6 +16,7 @@
 % Paquete de formato para scrbook. Con marcas, linea-separador superior e inferior
 \usepackage[automark,headsepline,footsepline]{scrlayer-scrpage}
 \clearpairofpagestyles		% Borra los estilos por defecto
+
 %%
 % Formato y contenido de la información de cabecera y pie de página
 %%
@@ -103,6 +104,8 @@
 \definecolor{greencomments}{rgb}{0,0.5,0}
 \definecolor{redstrings}{rgb}{0.9,0,0}
 
+\newcommand{\vsp}{\vspace{.5cm}\noindent}
+
 %%%%%%%%%%%%%%%%%%%%%%%%
 % TABLAS
 %%%%%%%%%%%%%%%%%%%%%%%%
@@ -118,7 +121,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%% 
 % Paquete para todo tipo de gráficas, diagramas, modificación de imágenes, etc
 \usepackage{tikz,tikzpagenodes}
-\usetikzlibrary{tikzmark,calc,shapes.geometric,arrows,backgrounds,shadings,shapes.arrows,shapes.symbols,shadows,positioning,fit,automata,patterns,intersections}
+\usetikzlibrary{arrows.meta,tikzmark,calc,shapes.geometric,arrows,backgrounds,shadings,shapes.arrows,shapes.symbols,shadows,positioning,fit,automata,patterns,intersections}
 \usepackage{pgfplots}
 \pgfplotsset{colormap/jet}
 \pgfplotsset{compat=newest} % Compatibilidad
@@ -129,6 +132,7 @@
 % documentos
 \if\OptimizaTikZ 1
 \usepgfplotslibrary{external}
+\tikzexternalize[prefix=tikz/] % TODO MINE
 \tikzset{%
     external/system call ={xelatex -enable-write18 -halt-on-error -interaction=batchmode -jobname "\image" "\texsource"},
 }
@@ -284,6 +288,9 @@
 %%%%
 % Uso ejemplo: \begin{ejemplo} tucontenido \end{ejemplo} 
 \newtheorem{teorema}{Teorema}[chapter]
+\theoremstyle{remark}
 \newtheorem{ejemplo}{Ejemplo}[chapter]
+\theoremstyle{definition}
 \newtheorem{definicion}{Definición}[chapter]
 
+\setlength\parindent{0pt}

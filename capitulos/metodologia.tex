@@ -8,78 +8,38 @@
 \chapter{Metodología}
 \label{metodologia}
 
-\section{Inserción de figuras}
+\section{Diseño de los experimentos}
 
-Las figuras son un caso un poco especial ya que \LaTeX~busca el mejor lugar para ponerlas, no siendo necesariamente el lugar donde está la referencia. Por ello es importante añadirle un ``caption'' y un ``label'' para poder hacer referencia a ellas en el párrafo correspondiente. Nosotros ponemos la referencia a la figura \ref{multiimagen} que está en la página \pageref{multiimagen}, justo aquí debajo, pero \LaTeX ~puede que la ubique en otro lugar. (observa el código \LaTeX~ de este párrafo para observar como se realizan las referencias. Estos detalles también se aplican a tablas y otros objetos).
+/**/
 
-\begin{table}[h]
-\centering
-\begin{tabular}{ccc}
-\includegraphics[scale=0.2]{archivos/130} & \includegraphics[scale=0.2]{archivos/160} & \includegraphics[scale=0.2]{archivos/190} \\
-$Dist=1m \; ; \; \phi=30º$  & $Dist=1m \; ; \; \phi=60º$  & $Dist=1m \; ; \; \phi=90º$  \\
-\includegraphics[scale=0.2]{archivos/230} & \includegraphics[scale=0.2]{archivos/260} & \includegraphics[scale=0.2]{archivos/290} \\
-$Dist=2m \; ; \; \phi=30º$  & $Dist=2m \; ; \; \phi=60º$  & $Dist=2m \; ; \; \phi=90º$  \\
-\includegraphics[scale=0.2]{archivos/330} & \includegraphics[scale=0.2]{archivos/360} & \includegraphics[scale=0.2]{archivos/390} \\
-$Dist=3m \; ; \; \phi=30º$  & $Dist=3m \; ; \; \phi=60º$  & $Dist=3m \; ; \; \phi=90º$ \\
-\end{tabular}
-\caption{Esta es una tabla con múltiples imágenes. Útil cuando se deben mostrar varias juntas.}
-\label{multiimagen} % 
-\end{table}
+El entrenamiento tanto en los modelos generativos (RNN, LSTM, decoder-only) como en los clasificadores (encoder-only) es business as usual 
+(pero explícalo lol)
 
-Existe también la posibilidad de realizarlo sin tablas, con subfiguras:
-\begin{lstlisting}[style=Latex-color]
-\begin{figure}[h]
-    \centering
-    \begin{subfigure}[b]{0.4\textwidth} % Espacio horizontal ocupado por la subfigura
-    	\centering
-        \includegraphics[width=4cm]{archivos/subs-sin} % Tamaño de la imagen
-        \caption{Sin procesado.}
-        \label{fig:gull}
-    \end{subfigure}
-    ~ % Añadir el espacio deseado, si se deja la linea en blanco la siguiente subfigura ira en una nueva linea
-    \begin{subfigure}[b]{0.4\textwidth} % Espacio horizontal ocupado por la subfigura
-    	\centering
-        \includegraphics[width=4cm]{archivos/subs-con} % Tamaño de la imagen
-        \caption{Con procesado.}
-        \label{fig:tiger}
-    \end{subfigure}
-    \caption{Ejemplo de subfiguras}\label{sistemass}
-\end{figure}
-\end{lstlisting}
-\begin{figure}[h]
-    \centering
-    \begin{subfigure}[b]{0.4\textwidth}
-    	\centering
-        \includegraphics[width=4cm]{archivos/subs-sin}
-        \caption{Sin procesado.}
-        \label{fig:gull1}
-    \end{subfigure}
-    ~ % Añadir el espacio deseado, si se deja la linea en blanco la siguiente subfigura ira en una nueva linea
-    \begin{subfigure}[b]{0.4\textwidth}
-    	\centering
-        \includegraphics[width=4cm]{archivos/subs-con}
-        \caption{Con procesado.}
-        \label{fig:tiger1}
-    \end{subfigure}
-    \caption{Ejemplo de subfiguras}\label{sistemass1}
-\end{figure}
+Para evaluación, en los \textbf{modelos generativos}:
 
-\begin{figure}[h]
-    \centering
-    \begin{subfigure}[b]{\textwidth}
-    	\centering
-        \includegraphics[width=4cm]{archivos/subs-sin}
-        \caption{Sin procesado.}
-        \label{fig:gull2}
-    \end{subfigure}
-    
-    \begin{subfigure}[b]{\textwidth}
-    	\centering
-        \includegraphics[width=4cm]{archivos/subs-con}
-        \caption{Con procesado.}
-        \label{fig:tiger2}
-    \end{subfigure}
-    \caption{Ejemplo de subfiguras vertical}\label{sistemass2}
-\end{figure}
+Nuestro caracter de inicio es el \^. Dado ese caracter, los modelos tienen que generar una cadena que lo continúe.
 
-Si eliminas la línea '\textbackslash caption' de las subfiguras, tendrás las imágenes sin la información individual, aunque sí con la principal. Y obviamente, si eliminas el de la figura no se mostrará ninguna información.
+Fácilmente podríamos simplemente comparar la cadena que genera con la cadena que queríamos que generara, pero esto introduce dificultades
+bastante únicas a nuestro objeto de estudio.
+Por ejemplo, si esperamos $a^4b^4$, y al modelo habiendo aprendido correctamente la gramática, le da por generar $a^7b^7$, 
+entonces estaríamos castigándolo por generar una cadena perfectamente válida.
+
+Adicionalmente, también perderíamos bastante nuance relacionada con la correctitud de cada caracter en cada posición de la cadena.
+Para un lenguaje $a^Nb^N$, lo que viene después de cualquier ``a" debería ser alguna distribución de probabilidad entre ``a" y ``b" (con suerte
+dándole algo de favoritismo a ``a"). En cambio, una vez se genera una ``b", la distribución de probabilidad debería colapsar en casi completo 
+favor a ``b", porque la gramática no permite después de una ``b" cualquier cosa que no sea otra ``b", o el fin de cadena.
+
+Entonces, si simplemente decimos si la cadena generada pertenece o no al lenguaje, estamos perdiendo datos sobre lo cercana a correcta que 
+era la cadena generada. Si esperamos ``aaabbb", es peor generar ``aaaba" que generar ``aaabb", porque la primera es una fumada y la segunda es
+un pequeño desajuste de probabilidades.
+
+De modo que tocará evaluar paso por paso e ignorar la idea de una cadena esperada. Para cada cadena de entrada, los modelos generarán el siguiente
+token, y nuestra única manera de evaluarlo será comprobando si ese caracter podía o no ponerse ahí según la gramática. Para esto será necesario
+implementar un méŧodo específico para todos los lenguajes, pero vivir es sufrir. Esa será nuestra forma de evaluar el parámetro de accuracy.
+
+En los \textbf{clasificadores}:
+
+Simplemente dada una cadena generarán un flotante entre 0 y 1, con 0 siendo absolutamente NO y 1 siendo absolutamente SÍ. A estos sí que se les 
+dará la cadena entera y se esperará un valor de vuelta. Sin más.
+
+
